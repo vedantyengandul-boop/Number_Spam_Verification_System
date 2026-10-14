@@ -715,12 +715,18 @@ st.markdown(
     .st-key-ns-search-row { position:relative; z-index:5; max-width:1220px; margin:-145px auto 38px !important; padding:0 28px 22px !important; box-sizing:border-box; }
     .ns-search-hint { color:#fff; font-size:.91rem; font-weight:650; padding:0 16px 10px; text-shadow:0 1px 5px rgba(0,0,0,.16); }
     .st-key-ns-search-row [data-testid="stHorizontalBlock"] { background:#fff; border:1px solid #d7def0; border-radius:10px; padding:9px 10px 9px 16px; gap:8px !important; box-shadow:0 8px 25px rgba(5,15,55,.12); align-items:center; }
+    .st-key-ns-search-row div[data-testid="stAlert"] {
+        display:block !important; width:100% !important; margin:0 0 12px !important;
+        background:#fff0f0 !important; color:#a3132a !important;
+        border:1px solid #ff8a98 !important; border-radius:10px !important;
+        padding:10px 14px !important; font-weight:700 !important;
+    }
     .st-key-ns-search-row div[data-testid="stTextInput"] { max-width:none; margin:0 !important; padding:0 !important; }
     .st-key-ns-search-row div[data-testid="stTextInput"] > label { display:none !important; }
     .st-key-ns-search-row div[data-testid="stTextInput"] input { background:#fff !important; color:#202a55 !important; border:0 !important; border-radius:5px !important; min-height:48px !important; padding:0 8px !important; box-shadow:none !important; font-size:1rem !important; }
     .st-key-ns-search-row div[data-testid="stTextInput"] input::placeholder { color:#7f879f !important; opacity:.85 !important; }
     .st-key-ns-search-row div.stButton { max-width:none; margin:0 !important; padding:0 !important; }
-    .st-key-ns-search-row div.stButton > button { width:100% !important; border-radius:8px !important; min-height:48px !important; white-space:nowrap; background:linear-gradient(120deg,#78a9f4,#8bd9e9) !important; color:#fff !important; border:0 !important; font-weight:800 !important; padding:0 18px !important; }
+    .st-key-ns-search-row div.stButton > button { width:100% !important; border-radius:8px !important; min-height:48px !important; white-space:nowrap; background:linear-gradient(120deg,#16b89a,#42d6b5) !important; color:#062b35 !important; border:0 !important; font-weight:800 !important; padding:0 18px !important; }
     @media(max-width:900px) {
       .st-key-ns-search-row { margin:-80px auto 30px !important; padding:0 20px 18px !important; }
       .ns-search-hint { font-size:.82rem; }
@@ -904,7 +910,7 @@ def clean_number(value: str) -> str:
 
     digits = re.sub(
 
-        r"D",
+        r"\D+",
 
         "",
 
@@ -2577,6 +2583,11 @@ if st.session_state.get("app_page", "home") == "home":
         # =========================================================
 
         with st.container(key="ns-search-row"):
+            # Show validation feedback at the TOP of the search card, above the input.
+            validation_message = st.session_state.pop("validation_error", None)
+            if validation_message:
+                st.error(validation_message, icon="⚠️")
+
             st.markdown(
                 '<div class="ns-search-hint">Enter your 10-digit Indian mobile number to check its spam status.</div>',
                 unsafe_allow_html=True,
@@ -2614,14 +2625,17 @@ if verify:
 
     # Show a dedicated message when the user presses Verify without typing anything.
     if not number.strip():
-        st.warning("Please Enter Number First")
-        st.stop()
+        st.session_state["validation_error"] = "Please Enter Number First"
+        st.session_state["app_page"] = "home"
+        st.rerun()
 
     # Basic Indian mobile-number format check.
     # This also avoids wasting an API request on obviously invalid input.
     if len(number) != 10 or number[0] not in "6789":
-        st.error("This number is invalid or does not exist.")
-        st.stop()
+        st.session_state["validation_error"] = "This number is invalid or does not exist."
+        st.session_state["app_page"] = "home"
+        st.rerun()
+
 
     st.session_state["submitted_number"] = number
     cached_result = get_cached_result(number)
