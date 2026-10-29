@@ -759,6 +759,41 @@ st.markdown(
     .stAppViewContainer > .main { background:transparent !important; }
     /* Keep the project content centered and the hero artwork unobstructed. */
     .block-container { padding-top:0 !important; }
+    
+/* Keep validation feedback above the search controls
+   without pushing the input and Verify button downward. */
+.st-key-ns-search-row {
+    position: relative !important;
+}
+
+.st-key-ns-search-row div[data-testid="stAlert"] {
+    position: absolute !important;
+    top: -76px !important;
+    left: 28px !important;
+    right: 28px !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    z-index: 20 !important;
+}
+
+@media (max-width: 900px) {
+    .st-key-ns-search-row div[data-testid="stAlert"] {
+        top: -70px !important;
+        left: 20px !important;
+        right: 20px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .st-key-ns-search-row div[data-testid="stAlert"] {
+        top: -76px !important;
+        left: 14px !important;
+        right: 14px !important;
+        padding: 10px 12px !important;
+    }
+}
+
 
     </style>
 
@@ -2582,30 +2617,41 @@ if st.session_state.get("app_page", "home") == "home":
 
         # =========================================================
 
-        with st.container(key="ns-search-row"):
-            # Show validation feedback at the TOP of the search card, above the input.
-            validation_message = st.session_state.pop("validation_error", None)
-            if validation_message:
-                st.error(validation_message, icon="⚠️")
 
-            st.markdown(
-                '<div class="ns-search-hint">Enter your 10-digit Indian mobile number to check its spam status.</div>',
-                unsafe_allow_html=True,
+    with st.container(key="ns-search-row"):
+        # Show validation feedback above the input.
+        validation_message = st.session_state.get("validation_error")
+
+        if validation_message:
+            st.error(validation_message, icon="⚠️")
+            st.session_state.pop("validation_error", None)
+
+        st.markdown(
+            '<div class="ns-search-hint">Enter your 10-digit Indian mobile number to check its spam status.</div>',
+            unsafe_allow_html=True,
+        )
+
+        search_col, button_col = st.columns(
+            [6, 1],
+            gap="small",
+            vertical_alignment="bottom",
+        )
+
+        with search_col:
+            number_input = st.text_input(
+                "Enter Mobile Number",
+                placeholder="Enter 10-digit Indian mobile number",
+                max_chars=10,
+                label_visibility="collapsed",
             )
-            search_col, button_col = st.columns([6, 1], gap="small", vertical_alignment="bottom")
-            with search_col:
-                number_input = st.text_input(
-                    "Enter Mobile Number",
-                    placeholder="Enter 10-digit Indian mobile number",
-                    max_chars=10,
-                    label_visibility="collapsed",
-                )
-            with button_col:
-                verify = st.button(
-                    "Verify Number",
-                    type="secondary",
-                    use_container_width=True,
-                )
+
+        with button_col:
+            verify = st.button(
+                "Verify Number",
+                type="secondary",
+                use_container_width=True,
+            )
+
 else:
     number_input = st.session_state.get("submitted_number", "")
     verify = False
